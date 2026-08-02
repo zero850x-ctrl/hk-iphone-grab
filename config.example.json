@@ -1,0 +1,20 @@
+{
+  "locale": "hk-zh",
+  "location": "香港",
+  "variant_key": "256gb_cosmic_orange",
+  "model_key": "iphone_17_pro",
+  "preferred_stores": ["R409", "R485", "R428"],
+  "poll_interval_sec": 5,
+  "mode": "monitor",
+  "cookies_file": "cookies.json",
+  "open_browser_on_hit": true,
+  "telegram": {
+    "enabled": false,
+    "bot_token": "",
+    "chat_id": ""
+  },
+  "bark": {
+    "enabled": false,
+    "url": "https://api.day.app/your-key/"
+  }
+}

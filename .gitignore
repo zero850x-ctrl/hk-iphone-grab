@@ -1,0 +1,17 @@
+# Secrets / local config
+cookies.json
+config.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
