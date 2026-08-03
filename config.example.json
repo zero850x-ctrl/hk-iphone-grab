@@ -1,9 +1,9 @@
 {
   "locale": "hk-zh",
   "location": "香港",
-  "variant_key": "256gb_cosmic_orange",
-  "model_key": "iphone_17_pro",
-  "preferred_stores": ["R409", "R485", "R428"],
+  "variant_key": "512gb_cosmic_orange",
+  "model_key": "iphone_17_pro_max",
+  "preferred_stores": ["R409", "R428", "R499"],
   "poll_interval_sec": 5,
   "mode": "monitor",
   "cookies_file": "cookies.json",

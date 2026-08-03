@@ -1,5 +1,6 @@
 # Secrets / local config
 cookies.json
+config.json
 config.local.json
 
 # Python

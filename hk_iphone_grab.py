@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import time
 import webbrowser
@@ -21,6 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.parse import quote
 
 import requests
 
@@ -34,11 +36,20 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ROOT = Path(__file__).resolve().parent
 USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
 
+try:
+    from curl_cffi import requests as _http
+    _USE_CURL = True
+except ImportError:
+    _USE_CURL = False
+
 # 香港 Apple Store（storeNumber）
+# 搶購時建議從瀏覽器匯出的 cookie（在產品頁完全載入後匯出）
+GRAB_COOKIE_HINTS = ("shld_bt_ck", "shld_bt_m", "as_sfa", "dssid2")
+
 HK_STORES = {
     "R409": "銅鑼灣 Causeway Bay",
     "R428": "ifc mall",
@@ -66,7 +77,10 @@ class AppleHKClient:
         self.locale = locale
         self.location = location
         self.base = f"https://www.apple.com/{locale}/shop"
-        self.session = requests.Session()
+        if _USE_CURL:
+            self.session = _http.Session(impersonate="chrome131")
+        else:
+            self.session = requests.Session()
         self.session.headers.update(
             {
                 "User-Agent": USER_AGENT,
@@ -128,7 +142,7 @@ class AppleHKClient:
         return True
 
     def check_pickup_stock(self, parts: List[str]) -> List[Dict[str, Any]]:
-        """使用 retail/pickup-message API（無需 cookie，實測可用）。"""
+        """使用 retail/pickup-message API。"""
         referer = f"{self.base}/buy-iphone/iphone-17-pro"
         self.warmup("buy-iphone/iphone-17-pro")
 
@@ -147,6 +161,10 @@ class AppleHKClient:
             headers=self._json_headers(referer),
             timeout=20,
         )
+        if r.status_code == 541:
+            raise RuntimeError(
+                "pickup-message HTTP 541（Apple 暫時擋下，請加大 poll_interval_sec 或稍後再試）"
+            )
         if r.status_code != 200:
             raise RuntimeError(f"pickup-message HTTP {r.status_code}")
 
@@ -172,13 +190,58 @@ class AppleHKClient:
             pass
         return self.session.cookies.get("as_atb")
 
-    def add_to_bag(self, product_url: str, part: str) -> bool:
-        """加入購物袋。通常需要從瀏覽器匯出的 cookie，否則可能 HTTP 541。"""
-        self.session.get(product_url, timeout=25)
-        atb = self.get_atb_token(product_url)
-        add_url = f"{product_url}?product={part}&add-to-cart=add-to-cart"
+    def resolve_product_url(self, part: str) -> str:
+        """用 part 編號解析實際產品頁（香港站會 redirect 到中文 slug）。"""
+        url = f"{self.base}/product/{part}"
+        r = self.session.get(url, timeout=25, allow_redirects=True)
+        if r.status_code == 200 and "Page Not Found" not in r.text[:2000]:
+            return r.url
+        return url
+
+    @staticmethod
+    def extract_fnode(html: str) -> str:
+        m = re.search(r"fnode=([a-f0-9]{40,})", html)
+        return m.group(1) if m else ""
+
+    def prepare_add_to_bag(self, product_url: str, part: str) -> Optional[str]:
+        """預熱加購物袋所需 session（fnode / sba init / atbtoken）。"""
+        if "/product/" in product_url:
+            product_url = self.resolve_product_url(part)
+
+        r = self.session.get(product_url, timeout=25)
+        if r.status_code != 200:
+            return None
+
+        fnode = self.extract_fnode(r.text)
+        self.session.get(f"{self.base}/dc", timeout=10)
+        if fnode:
+            init = self.session.get(
+                f"{self.base}/sba/d/init",
+                params={"fnode": fnode, "product": part},
+                headers={"Referer": product_url, "Accept": "application/json"},
+                timeout=20,
+            )
+            if init.status_code == 200:
+                try:
+                    if init.json().get("body", {}).get("status") != "OK":
+                        return None
+                except Exception:
+                    return None
+
+        return self.get_atb_token(product_url)
+
+    @staticmethod
+    def build_add_to_cart_url(product_url: str, part: str, atb: Optional[str] = None) -> str:
+        encoded_part = quote(part, safe="")
+        add_url = f"{product_url}?product={encoded_part}&add-to-cart=add-to-cart"
         if atb:
             add_url += f"&atbtoken={atb}"
+        return add_url
+
+    def add_to_bag(self, product_url: str, part: str) -> bool:
+        """加入購物袋。通常需要從瀏覽器匯出的 cookie，否則可能 HTTP 541。"""
+        atb = self.prepare_add_to_bag(product_url, part)
+        add_url = self.build_add_to_cart_url(product_url, part, atb)
 
         r = self.session.get(
             add_url,
@@ -188,7 +251,12 @@ class AppleHKClient:
         )
         if r.status_code == 541:
             return False
-        return r.status_code == 200
+        if r.status_code != 200:
+            return False
+
+        bag = self.session.get(f"{self.base}/bag", timeout=25)
+        part_key = part.split("/")[0]
+        return part_key in bag.text
 
     def checkout_now(self) -> Optional[str]:
         """進入結帳，回傳 checkout URL。"""
@@ -239,8 +307,8 @@ def resolve_variant(models: Dict[str, Any], model_key: str, variant_key: str) ->
     }
 
 
-def build_product_url(locale: str, buy_slug: str, product_path: str) -> str:
-    return f"https://www.apple.com/{locale}/shop/{buy_slug}/{product_path}"
+def build_product_url(locale: str, part: str) -> str:
+    return f"https://www.apple.com/{locale}/shop/product/{part}"
 
 
 def parse_stock_hits(
@@ -303,6 +371,184 @@ def format_hit(hit: StockHit) -> str:
     )
 
 
+def _session_cookie_names(session: Any) -> set[str]:
+    jar = session.cookies
+    if hasattr(jar, "keys"):
+        return set(jar.keys())
+    return {c.name for c in jar}
+
+
+def validate_grab_cookies(client: AppleHKClient) -> List[str]:
+    """回傳缺少的建議 cookie 名稱。"""
+    names = _session_cookie_names(client.session)
+    return [name for name in GRAB_COOKIE_HINTS if name not in names]
+
+
+def _load_playwright_cookies(path: Path) -> List[Dict[str, Any]]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    cookies: List[Dict[str, Any]] = []
+    for c in data:
+        same_site = c.get("sameSite")
+        if same_site not in ("Strict", "Lax", "None"):
+            same_site = "Lax"
+        item: Dict[str, Any] = {
+            "name": c["name"],
+            "value": c["value"],
+            "domain": c.get("domain", ".apple.com"),
+            "path": c.get("path", "/"),
+            "secure": c.get("secure", True),
+            "httpOnly": c.get("httpOnly", False),
+            "sameSite": same_site,
+        }
+        if c.get("expirationDate"):
+            item["expires"] = int(c["expirationDate"])
+        cookies.append(item)
+    return cookies
+
+
+def _click_if_present(page: Any, selector: str, wait_ms: int = 600) -> bool:
+    loc = page.locator(selector)
+    if not loc.count():
+        return False
+    loc.first.click(force=True)
+    page.wait_for_timeout(wait_ms)
+    return True
+
+
+def _click_label_if_present(page: Any, text: str, wait_ms: int = 600) -> bool:
+    loc = page.locator("label").filter(has_text=text)
+    if not loc.count():
+        return False
+    loc.first.click(force=True)
+    page.wait_for_timeout(wait_ms)
+    return True
+
+
+def ensure_playwright_chrome() -> bool:
+    """確保 Playwright 與 Chrome 已安裝。"""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("❌ 請先安裝: pip install playwright")
+        print("   然後執行: python -m playwright install chrome")
+        return False
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(channel="chrome", headless=True)
+            browser.close()
+        return True
+    except Exception:
+        print("正在安裝 Playwright Chrome（首次需幾分鐘）...")
+        print("   指令: python -m playwright install chrome")
+        subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chrome"],
+            check=False,
+        )
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(channel="chrome", headless=True)
+                browser.close()
+            return True
+        except Exception:
+            print("❌ Chrome 安裝失敗，請手動執行: python -m playwright install chrome")
+            return False
+
+
+def add_to_bag_browser(
+    product_url: str,
+    cookies_path: Path,
+    variant: Dict[str, str],
+    locale: str = "hk-zh",
+    headless: bool = False,
+    keep_open_sec: int = 90,
+) -> bool:
+    """用 Playwright 打開產品頁，自動選不換購/無 AppleCare+ 並加入購物袋。"""
+    if not ensure_playwright_chrome():
+        return False
+
+    from playwright.sync_api import sync_playwright
+
+    if not cookies_path.exists():
+        return False
+
+    pw_cookies = _load_playwright_cookies(cookies_path)
+    bag_url = f"https://www.apple.com/{locale}/shop/bag"
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(channel="chrome", headless=headless)
+        context = browser.new_context(locale="zh-HK", viewport={"width": 1400, "height": 1200})
+        context.add_cookies(pw_cookies)
+        page = context.new_page()
+
+        print("🌐 打開產品頁，自動選購選項...")
+        page.goto(product_url, wait_until="networkidle", timeout=90000)
+        page.wait_for_timeout(1500)
+
+        # 顏色 / 容量（產品頁 URL 有時未預選）
+        variant_name = variant.get("name", "")
+        if "宇宙橙" in variant_name:
+            _click_label_if_present(page, "宇宙橙")
+        elif "銀色" in variant_name:
+            _click_label_if_present(page, "銀色")
+        elif "深墨藍" in variant_name or "深藍" in variant_name:
+            _click_label_if_present(page, "深墨藍")
+
+        for storage in ("256GB", "512GB", "1TB", "2TB"):
+            if storage in variant_name:
+                _click_label_if_present(page, storage)
+                break
+
+        _click_if_present(page, "[data-autom='choose-noTradeIn']")
+        _click_if_present(page, "input#noTradeIn")
+        _click_if_present(page, "[data-autom='noapplecare']")
+
+        btn = page.locator("button[name='add-to-cart']")
+        btn.scroll_into_view_if_needed()
+        for _ in range(24):
+            disabled = btn.get_attribute("aria-disabled")
+            if disabled != "true":
+                break
+            page.wait_for_timeout(500)
+
+        if btn.get_attribute("aria-disabled") == "true":
+            print("⚠️  加入購物袋按鈕仍未啟用，請在瀏覽器手動完成選項後按鈕")
+            if not headless:
+                page.wait_for_timeout(keep_open_sec * 1000)
+            browser.close()
+            return False
+
+        print("🛒 按「加入購物袋」...")
+        btn.click()
+        page.wait_for_timeout(5000)
+
+        for sel in (
+            "[data-autom='proceed']",
+            "button:has-text('檢視購物袋')",
+            "button:has-text('查看購物袋')",
+            "a[href*='/shop/bag']",
+        ):
+            if _click_if_present(page, sel, wait_ms=2000):
+                break
+
+        page.goto(bag_url, wait_until="networkidle", timeout=60000)
+        body = page.inner_text("body")
+        ok = "沒有任何項目" not in body and "no items" not in body.lower()
+
+        if ok:
+            print("✅ 瀏覽器已加入購物袋")
+            if not headless:
+                page.wait_for_timeout(3000)
+        else:
+            print("⚠️  購物袋仍為空，請在已打開的瀏覽器手動按「加入購物袋」")
+            if not headless:
+                page.goto(product_url, wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_timeout(keep_open_sec * 1000)
+
+        browser.close()
+        return ok
+
+
 def list_all_stores(client: AppleHKClient, part: str) -> None:
     stores = client.check_pickup_stock([part])
     print(f"\n型號 {part} — 香港各店庫存 ({datetime.now():%Y-%m-%d %H:%M:%S})\n")
@@ -323,62 +569,83 @@ def run_monitor(cfg: Dict[str, Any], once: bool = False) -> None:
     models = load_models()
     variant = resolve_variant(models, cfg["model_key"], cfg["variant_key"])
     part = variant["part"]
-    product_url = build_product_url(cfg["locale"], variant["buy_slug"], variant["product_path"])
+    product_url = build_product_url(cfg["locale"], part)
 
     client = AppleHKClient(cfg["locale"], cfg["location"])
+    cookies_path = ROOT / cfg.get("cookies_file", "cookies.json")
+    if cookies_path.exists():
+        client.load_cookies_file(cookies_path)
+
     preferred = cfg.get("preferred_stores") or None
     interval = int(cfg.get("poll_interval_sec", 5))
+    base_interval = interval
     seen: set[str] = set()
+    grab_attempted = False
+    mode = cfg.get("mode", "monitor")
 
     print("=" * 60)
     print(f"監控: {variant['model_name']} {variant['name']}")
     print(f"型號: {part}")
     print(f"偏好店舖: {', '.join(preferred or ['全部'])}")
+    print(f"模式: {mode}" + (" (有貨時自動加購物袋)" if mode == "grab" else " (只通知，不加購物袋)"))
+    if mode != "grab":
+        print("提示: 要自動加購物袋請設 config mode=grab 或執行 python hk_iphone_grab.py --grab")
     print(f"間隔: {interval}s | 按 Ctrl+C 停止")
     print("=" * 60)
 
-    while True:
-        try:
-            stores = client.check_pickup_stock([part])
-            hits = parse_stock_hits(stores, part, variant["name"], product_url, preferred)
+    try:
+        while True:
+            try:
+                stores = client.check_pickup_stock([part])
+                interval = base_interval
+                hits = parse_stock_hits(stores, part, variant["name"], product_url, preferred)
 
-            if hits:
-                for hit in hits:
-                    key = f"{hit.store_id}:{hit.part}"
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    msg = format_hit(hit)
-                    print(f"\n{msg}\n")
+                if hits:
+                    for hit in hits:
+                        key = f"{hit.store_id}:{hit.part}"
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        msg = format_hit(hit)
+                        print(f"\n{msg}\n")
 
-                    if cfg.get("telegram", {}).get("enabled"):
-                        notify_telegram(
-                            cfg["telegram"]["bot_token"],
-                            cfg["telegram"]["chat_id"],
-                            msg,
-                        )
-                    if cfg.get("bark", {}).get("enabled"):
-                        notify_bark(
-                            cfg["bark"]["url"],
-                            "iPhone 有貨",
-                            msg,
-                            hit.product_url,
-                        )
-                    if cfg.get("open_browser_on_hit"):
-                        webbrowser.open(hit.product_url)
+                        if cfg.get("telegram", {}).get("enabled"):
+                            notify_telegram(
+                                cfg["telegram"]["bot_token"],
+                                cfg["telegram"]["chat_id"],
+                                msg,
+                            )
+                        if cfg.get("bark", {}).get("enabled"):
+                            notify_bark(
+                                cfg["bark"]["url"],
+                                "iPhone 有貨",
+                                msg,
+                                hit.product_url,
+                            )
+                        if cfg.get("open_browser_on_hit") and cfg.get("mode") != "grab":
+                            webbrowser.open(hit.product_url)
 
-                    if cfg.get("mode") == "grab":
-                        run_grab(client, cfg, variant, hit)
-            else:
-                ts = datetime.now().strftime("%H:%M:%S")
-                print(f"{ts} 無貨 — {variant['name']}", end="\r", flush=True)
+                        if cfg.get("mode") == "grab" and not grab_attempted:
+                            grab_attempted = True
+                            run_grab(client, cfg, variant, hit)
+                else:
+                    ts = datetime.now().strftime("%H:%M:%S")
+                    print(f"{ts} 無貨 — {variant['name']}", end="\r", flush=True)
 
-        except Exception as e:
-            print(f"\n錯誤: {e} — {interval}s 後重試")
+            except Exception as e:
+                err = str(e)
+                if "541" in err:
+                    interval = min(interval * 2, 60)
+                    print(f"\n⚠️  {err}")
+                    print(f"   已延長輪詢間隔至 {interval}s")
+                else:
+                    print(f"\n錯誤: {e} — {interval}s 後重試")
 
-        if once:
-            break
-        time.sleep(interval)
+            if once:
+                break
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print("\n已停止監控")
 
 
 def run_grab(
@@ -386,43 +653,48 @@ def run_grab(
     cfg: Dict[str, Any],
     variant: Dict[str, str],
     hit: Optional[StockHit] = None,
-) -> None:
-    """加購物袋 + 進結帳。需要 cookies.json。"""
+) -> bool:
+    """加購物袋 + 進結帳。需要 cookies.json。成功回傳 True。"""
     cookies_path = ROOT / cfg.get("cookies_file", "cookies.json")
     if not client.load_cookies_file(cookies_path):
         print(
             f"⚠️  找不到有效 cookie: {cookies_path}\n"
             "   請先登入 apple.com/hk，用瀏覽器擴充匯出 cookie 到 cookies.json"
         )
-        return
+        return False
 
-    product_url = build_product_url(cfg["locale"], variant["buy_slug"], variant["product_path"])
+    missing = validate_grab_cookies(client)
+    if missing:
+        print("⚠️  cookies.json 可能過期，缺少: " + ", ".join(missing))
+        print(
+            "   請在 Chrome 打開產品頁、等頁面完全載入後，\n"
+            "   用 Cookie-Editor 匯出 JSON 覆蓋 cookies.json"
+        )
+
     part = variant["part"]
+    product_url = client.resolve_product_url(part)
+    headless = bool(cfg.get("browser_headless", False))
 
-    print(f"嘗試加入購物袋: {part} ...")
-    ok = client.add_to_bag(product_url, part)
-    if not ok:
-        print("❌ 加購物袋失敗 (HTTP 541 = 需更新 cookie 或 Akamai 擋下)")
-        print(f"   手動開啟: {product_url}")
-        if cfg.get("open_browser_on_hit"):
-            webbrowser.open(product_url)
-        return
-
-    print("✅ 已加入購物袋，進入結帳...")
-    checkout_url = client.checkout_now()
-    if checkout_url:
-        print(f"結帳頁: {checkout_url}")
+    print(f"啟動瀏覽器自動加購: {part} ...")
+    if add_to_bag_browser(
+        product_url,
+        cookies_path,
+        variant,
+        locale=cfg["locale"],
+        headless=headless,
+        keep_open_sec=int(cfg.get("browser_keep_open_sec", 90)),
+    ):
         if hit:
             print(
                 f"\n📍 結帳時選店舖: {HK_STORES.get(hit.store_id, hit.store_name)} "
                 f"(storeNumber={hit.store_id})\n"
                 f"📅 取貨時間參考 API: {hit.pickup_quote} (日期碼 {hit.pickup_date})"
             )
-        if cfg.get("open_browser_on_hit"):
-            webbrowser.open(checkout_url)
-    else:
-        print("❌ checkout_now 失敗，請手動打開購物袋")
         webbrowser.open(f"https://www.apple.com/{cfg['locale']}/shop/bag")
+        return True
+
+    print("❌ 瀏覽器自動加購未完成，請手動完成")
+    return False
 
 
 def list_models() -> None:
