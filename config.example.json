@@ -8,6 +8,9 @@
   "mode": "monitor",
   "cookies_file": "cookies.json",
   "open_browser_on_hit": true,
+  "browser_headless": false,
+  "chrome_cdp": "",
+  "browser_profile_dir": ".chrome-grab",
   "telegram": {
     "enabled": false,
     "bot_token": "",

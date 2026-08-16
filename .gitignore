@@ -16,3 +16,6 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Playwright persistent Chrome profile
+.chrome-grab/
