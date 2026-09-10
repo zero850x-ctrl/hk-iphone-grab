@@ -1,118 +1,173 @@
 {
-  "iphone_17_pro_max": {
-    "name": "iPhone 17 Pro Max",
-    "buy_slug": "buy-iphone/iphone-17-pro",
+  "iphone_18_pro_max": {
+    "name": "iPhone 18 Pro Max",
+    "buy_slug": "buy-iphone/iphone-18-pro",
     "variants": {
-      "256gb_cosmic_orange": {
-        "part": "MFYN4ZA/A",
-        "name": "256GB 宇宙橙色",
-        "product_path": "6.9-inch-display-256gb-cosmic-orange-unlocked"
+      "256gb_black": {
+        "part": "MJXN4ZA/A",
+        "name": "256GB 黑色",
+        "product_path": "6.9-inch-display-256gb-black-unlocked"
       },
-      "256gb_deep_blue": {
-        "part": "MFYP4ZA/A",
-        "name": "256GB 深墨藍色",
-        "product_path": "6.9-inch-display-256gb-deep-blue-unlocked"
+      "256gb_burgundy": {
+        "part": "MJXQ4ZA/A",
+        "name": "256GB 布根地紅色",
+        "product_path": "6.9-inch-display-256gb-burgundy-unlocked"
+      },
+      "256gb_glacier": {
+        "part": "MJXR4ZA/A",
+        "name": "256GB 冰川色",
+        "product_path": "6.9-inch-display-256gb-glacier-unlocked"
       },
       "256gb_silver": {
-        "part": "MFYM4ZA/A",
+        "part": "MJXP4ZA/A",
         "name": "256GB 銀色",
         "product_path": "6.9-inch-display-256gb-silver-unlocked"
       },
-      "512gb_cosmic_orange": {
-        "part": "MFYT4ZA/A",
-        "name": "512GB 宇宙橙色",
-        "product_path": "6.9-inch-display-512gb-cosmic-orange-unlocked"
+      "512gb_black": {
+        "part": "MJXT4ZA/A",
+        "name": "512GB 黑色",
+        "product_path": "6.9-inch-display-512gb-black-unlocked"
       },
-      "512gb_deep_blue": {
-        "part": "MFYU4ZA/A",
-        "name": "512GB 深墨藍色",
-        "product_path": "6.9-inch-display-512gb-deep-blue-unlocked"
+      "512gb_burgundy": {
+        "part": "MJXV4ZA/A",
+        "name": "512GB 布根地紅色",
+        "product_path": "6.9-inch-display-512gb-burgundy-unlocked"
+      },
+      "512gb_glacier": {
+        "part": "MJXW4ZA/A",
+        "name": "512GB 冰川色",
+        "product_path": "6.9-inch-display-512gb-glacier-unlocked"
       },
       "512gb_silver": {
-        "part": "MFYQ4ZA/A",
+        "part": "MJXU4ZA/A",
         "name": "512GB 銀色",
         "product_path": "6.9-inch-display-512gb-silver-unlocked"
       },
-      "1tb_cosmic_orange": {
-        "part": "MFYW4ZA/A",
-        "name": "1TB 宇宙橙色",
-        "product_path": "6.9-inch-display-1tb-cosmic-orange-unlocked"
+      "1tb_black": {
+        "part": "MJXX4ZA/A",
+        "name": "1TB 黑色",
+        "product_path": "6.9-inch-display-1tb-black-unlocked"
       },
-      "1tb_deep_blue": {
-        "part": "MFYX4ZA/A",
-        "name": "1TB 深墨藍色",
-        "product_path": "6.9-inch-display-1tb-deep-blue-unlocked"
+      "1tb_burgundy": {
+        "part": "MJY04ZA/A",
+        "name": "1TB 布根地紅色",
+        "product_path": "6.9-inch-display-1tb-burgundy-unlocked"
+      },
+      "1tb_glacier": {
+        "part": "MJY14ZA/A",
+        "name": "1TB 冰川色",
+        "product_path": "6.9-inch-display-1tb-glacier-unlocked"
       },
       "1tb_silver": {
-        "part": "MFYV4ZA/A",
+        "part": "MJXY4ZA/A",
         "name": "1TB 銀色",
         "product_path": "6.9-inch-display-1tb-silver-unlocked"
       },
-      "2tb_cosmic_orange": {
-        "part": "MG004ZA/A",
-        "name": "2TB 宇宙橙色",
-        "product_path": "6.9-inch-display-2tb-cosmic-orange-unlocked"
+      "2tb_black": {
+        "part": "MJY24ZA/A",
+        "name": "2TB 黑色",
+        "product_path": "6.9-inch-display-2tb-black-unlocked"
       },
-      "2tb_deep_blue": {
-        "part": "MG014ZA/A",
-        "name": "2TB 深墨藍色",
-        "product_path": "6.9-inch-display-2tb-deep-blue-unlocked"
+      "2tb_burgundy": {
+        "part": "MJY44ZA/A",
+        "name": "2TB 布根地紅色",
+        "product_path": "6.9-inch-display-2tb-burgundy-unlocked"
+      },
+      "2tb_glacier": {
+        "part": "MJY54ZA/A",
+        "name": "2TB 冰川色",
+        "product_path": "6.9-inch-display-2tb-glacier-unlocked"
       },
       "2tb_silver": {
-        "part": "MFYY4ZA/A",
+        "part": "MJY34ZA/A",
         "name": "2TB 銀色",
         "product_path": "6.9-inch-display-2tb-silver-unlocked"
       }
     }
   },
-  "iphone_17_pro": {
-    "name": "iPhone 17 Pro",
-    "buy_slug": "buy-iphone/iphone-17-pro",
+  "iphone_18_pro": {
+    "name": "iPhone 18 Pro",
+    "buy_slug": "buy-iphone/iphone-18-pro",
     "variants": {
-      "256gb_cosmic_orange": {
-        "part": "MG8H4ZA/A",
-        "name": "256GB 宇宙橙色",
-        "product_path": "6.3-inch-display-256gb-cosmic-orange-unlocked"
+      "256gb_black": {
+        "part": "MJRP4ZA/A",
+        "name": "256GB 黑色",
+        "product_path": "6.3-inch-display-256gb-black-unlocked"
       },
-      "256gb_deep_blue": {
-        "part": "MG8J4ZA/A",
-        "name": "256GB 深墨藍色",
-        "product_path": "6.3-inch-display-256gb-deep-blue-unlocked"
+      "256gb_burgundy": {
+        "part": "MJRR4ZA/A",
+        "name": "256GB 布根地紅色",
+        "product_path": "6.3-inch-display-256gb-burgundy-unlocked"
+      },
+      "256gb_glacier": {
+        "part": "MJRT4ZA/A",
+        "name": "256GB 冰川色",
+        "product_path": "6.3-inch-display-256gb-glacier-unlocked"
       },
       "256gb_silver": {
-        "part": "MG8G4ZA/A",
+        "part": "MJRQ4ZA/A",
         "name": "256GB 銀色",
         "product_path": "6.3-inch-display-256gb-silver-unlocked"
       },
-      "512gb_cosmic_orange": {
-        "part": "MG8M4ZA/A",
-        "name": "512GB 宇宙橙色",
-        "product_path": "6.3-inch-display-512gb-cosmic-orange-unlocked"
+      "512gb_black": {
+        "part": "MJRU4ZA/A",
+        "name": "512GB 黑色",
+        "product_path": "6.3-inch-display-512gb-black-unlocked"
       },
-      "512gb_deep_blue": {
-        "part": "MG8N4ZA/A",
-        "name": "512GB 深墨藍色",
-        "product_path": "6.3-inch-display-512gb-deep-blue-unlocked"
+      "512gb_burgundy": {
+        "part": "MJRW4ZA/A",
+        "name": "512GB 布根地紅色",
+        "product_path": "6.3-inch-display-512gb-burgundy-unlocked"
+      },
+      "512gb_glacier": {
+        "part": "MJRX4ZA/A",
+        "name": "512GB 冰川色",
+        "product_path": "6.3-inch-display-512gb-glacier-unlocked"
       },
       "512gb_silver": {
-        "part": "MG8K4ZA/A",
+        "part": "MJRV4ZA/A",
         "name": "512GB 銀色",
         "product_path": "6.3-inch-display-512gb-silver-unlocked"
       },
-      "1tb_cosmic_orange": {
-        "part": "MG8Q4ZA/A",
-        "name": "1TB 宇宙橙色",
-        "product_path": "6.3-inch-display-1tb-cosmic-orange-unlocked"
+      "1tb_black": {
+        "part": "MJRY4ZA/A",
+        "name": "1TB 黑色",
+        "product_path": "6.3-inch-display-1tb-black-unlocked"
       },
-      "1tb_deep_blue": {
-        "part": "MG8R4ZA/A",
-        "name": "1TB 深墨藍色",
-        "product_path": "6.3-inch-display-1tb-deep-blue-unlocked"
+      "1tb_burgundy": {
+        "part": "MJT14ZA/A",
+        "name": "1TB 布根地紅色",
+        "product_path": "6.3-inch-display-1tb-burgundy-unlocked"
+      },
+      "1tb_glacier": {
+        "part": "MJT24ZA/A",
+        "name": "1TB 冰川色",
+        "product_path": "6.3-inch-display-1tb-glacier-unlocked"
       },
       "1tb_silver": {
-        "part": "MG8P4ZA/A",
+        "part": "MJT04ZA/A",
         "name": "1TB 銀色",
         "product_path": "6.3-inch-display-1tb-silver-unlocked"
+      },
+      "2tb_black": {
+        "part": "MJT34ZA/A",
+        "name": "2TB 黑色",
+        "product_path": "6.3-inch-display-2tb-black-unlocked"
+      },
+      "2tb_burgundy": {
+        "part": "MJT54ZA/A",
+        "name": "2TB 布根地紅色",
+        "product_path": "6.3-inch-display-2tb-burgundy-unlocked"
+      },
+      "2tb_glacier": {
+        "part": "MJT64ZA/A",
+        "name": "2TB 冰川色",
+        "product_path": "6.3-inch-display-2tb-glacier-unlocked"
+      },
+      "2tb_silver": {
+        "part": "MJT44ZA/A",
+        "name": "2TB 銀色",
+        "product_path": "6.3-inch-display-2tb-silver-unlocked"
       }
     }
   },
@@ -144,62 +199,6 @@
         "part": "MYEW3ZA/A",
         "name": "128GB 白色",
         "product_path": "6.1-inch-display-128gb-white-unlocked"
-      }
-    }
-  },
-  "iphone_16_plus": {
-    "name": "iPhone 16 Plus",
-    "buy_slug": "buy-iphone/iphone-16",
-    "variants": {
-      "128gb_black": {
-        "part": "MXU93ZA/A",
-        "name": "128GB 黑色",
-        "product_path": "6.7-inch-display-128gb-black-unlocked"
-      },
-      "128gb_pink": {
-        "part": "MXUC3ZA/A",
-        "name": "128GB 粉紅色",
-        "product_path": "6.7-inch-display-128gb-pink-unlocked"
-      },
-      "128gb_teal": {
-        "part": "MXUE3ZA/A",
-        "name": "128GB 湖水綠色",
-        "product_path": "6.7-inch-display-128gb-teal-unlocked"
-      },
-      "128gb_ultramarine": {
-        "part": "MXUD3ZA/A",
-        "name": "128GB 群青色",
-        "product_path": "6.7-inch-display-128gb-ultramarine-unlocked"
-      },
-      "128gb_white": {
-        "part": "MXUA3ZA/A",
-        "name": "128GB 白色",
-        "product_path": "6.7-inch-display-128gb-white-unlocked"
-      },
-      "256gb_black": {
-        "part": "MXUF3ZA/A",
-        "name": "256GB 黑色",
-        "product_path": "6.7-inch-display-256gb-black-unlocked"
-      },
-      "256gb_pink": {
-        "part": "MXUH3ZA/A",
-        "name": "256GB 粉紅色",
-        "product_path": "6.7-inch-display-256gb-pink-unlocked"
-      },
-      "256gb_teal": {
-        "part": "MXUK3ZA/A",
-        "name": "256GB 湖水綠色",
-        "product_path": "6.7-inch-display-256gb-teal-unlocked"
-      },
-      "256gb_ultramarine": {
-        "part": "MXUJ3ZA/A",
-        "name": "256GB 群青色",
-        "product_path": "6.7-inch-display-256gb-ultramarine-unlocked"
-      },
-      "256gb_white": {
-        "part": "MXUG3ZA/A",
-        "name": "256GB 白色",
-        "product_path": "6.7-inch-display-256gb-white-unlocked"
       }
     }
   },
@@ -358,6 +357,52 @@
         "part": "MG2W4ZA/A",
         "name": "1TB 太空黑",
         "product_path": "1tb-space-black-unlocked"
+      }
+    }
+  },
+  "iphone_duo": {
+    "name": "iPhone Duo",
+    "buy_slug": "buy-iphone/iphone-duo",
+    "variants": {
+      "256gb_nightsky": {
+        "part": "MK2E4ZA/A",
+        "name": "256GB 夜空色",
+        "product_path": "256gb-nightsky-unlocked"
+      },
+      "256gb_star_white": {
+        "part": "MK2D4ZA/A",
+        "name": "256GB 星光白色",
+        "product_path": "256gb-star-white-unlocked"
+      },
+      "512gb_nightsky": {
+        "part": "MK2G4ZA/A",
+        "name": "512GB 夜空色",
+        "product_path": "512gb-nightsky-unlocked"
+      },
+      "512gb_star_white": {
+        "part": "MK2F4ZA/A",
+        "name": "512GB 星光白色",
+        "product_path": "512gb-star-white-unlocked"
+      },
+      "1tb_nightsky": {
+        "part": "MK2J4ZA/A",
+        "name": "1TB 夜空色",
+        "product_path": "1tb-nightsky-unlocked"
+      },
+      "1tb_star_white": {
+        "part": "MK2H4ZA/A",
+        "name": "1TB 星光白色",
+        "product_path": "1tb-star-white-unlocked"
+      },
+      "2tb_nightsky": {
+        "part": "MK2L4ZA/A",
+        "name": "2TB 夜空色",
+        "product_path": "2tb-nightsky-unlocked"
+      },
+      "2tb_star_white": {
+        "part": "MK2K4ZA/A",
+        "name": "2TB 星光白色",
+        "product_path": "2tb-star-white-unlocked"
       }
     }
   }
