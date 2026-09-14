@@ -34,7 +34,7 @@ Apple 會擋腳本直接 `add-to-cart`（HTTP 541），所以加購必須走瀏�
 ## 1. 安裝
 
 ```powershell
-cd C:\Users\GordonLui\hk-iphone-grab
+cd hk-iphone-grab
 pip install -r requirements.txt
 python -m playwright install chrome
 copy config.example.json config.json
